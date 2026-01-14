@@ -1,0 +1,32 @@
+# User Audio Data
+SampleAudio/
+AudioTools/Kratos_Vocals/
+AudioTools/temp_dl/
+
+# Legacy/Archive
+legacy_tts_tools/
+
+# Python / Environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv_vibevoice_new/
+VibeVoice_new/venv_vibevoice_new/
+.env
+
+# Generated Outputs
+*.wav
+
+# Models
+tmp_model/
+# HuggingFace cache if local?
+*.bin
+*.safetensors
+# We might want to keep light models, but 7B is too big. 
+# The 7B model is likely in the HF cache (~/.cache), not here, unless user downloaded to local dir.
+# But just in case:
+*.pt
+
+# System
+.DS_Store
+Thumbs.db
