@@ -21,6 +21,24 @@ python AudioTools/download_exact.py https://www.youtube.com/watch?v=Whsq6npp8rM 
 ```
 *Current optimized clips are stored in `SampleAudio/Exact_Reference`.*
 
+### 3. Audio Processing Pipeline (Demucs + Pyannote)
+To prepare high-quality datasets effectively, we use a two-stage pipeline:
+
+**Step 1: Install Dependencies**
+```powershell
+pip install pyannote.audio demucs ffmpeg-python webrtcvad-wheels
+```
+
+**Step 2: Isolate & Clean**
+Use the `isolate_speaker_v2.py` script. This automatically runs **Demucs** to remove background noise/music (extracting vocals), then uses **Pyannote 3.1** to identify and isolate the target speaker.
+
+```powershell
+# --clean: Enables Demucs pre-processing (Recommended for rallies/interviews)
+# --anchor: Path to "Known Good" reference audio (for identification)
+# --token: HuggingFace Token (required for Pyannote)
+python AudioTools/isolate_speaker_v2.py "RawAudio/Interview.wav" --anchor "SampleAudio/Trump_KnownGood" --output "SampleAudio/Trump_Clean.wav" --clean --token "YOUR_HF_TOKEN"
+```
+
 ## 🎙️ Generation Commands
 
 ### Option A: VibeVoice 1.5B (Standard)
@@ -33,7 +51,8 @@ python main.py input.txt --ref_audio SampleAudio/Exact_Reference --engine vibevo
 
 ### Option B: VibeVoice 7B (High Capability)
 **Best for**: Maximum nuance, Complex prosody.
-**Requirements**: ~14GB+ VRAM (Auto-switches to FP16 to fit on 24GB cards).
+**Requirements**: ~14GB VRAM (Weights) + ~4GB (Context) = ~18GB Total on 24GB card.
+**Context Limit**: ~100s-200s max on 24GB.
 **Recommended Model**: `aoi-ot/VibeVoice-7B` (Community mirror).
 
 ```powershell

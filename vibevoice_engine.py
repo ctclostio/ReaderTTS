@@ -1,4 +1,8 @@
+import sys
 import os
+# Add VibeVoice_new to path to locate the 'vibevoice' package
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "VibeVoice_new"))
+
 import torch
 import numpy as np
 import random
@@ -83,6 +87,8 @@ class VibeVoiceClient:
         
         torch.cuda.empty_cache() # Clear any residual memory
         
+        selected_clips = []
+        
         print(f"Selecting random subset of clips to reach ~{target_duration}s...")
         for ref_path in ref_audios:
             if current_duration >= target_duration:
@@ -93,12 +99,35 @@ class VibeVoiceClient:
                 audio, _ = librosa.load(ref_path, sr=target_sr)
                 combined_ref_audio.append(audio)
                 current_duration += len(audio) / target_sr
+                selected_clips.append(ref_path)
             except Exception as e:
                 print(f"Error loading ref {ref_path}: {e}")
         
         if combined_ref_audio:
             final_ref_audio = np.concatenate(combined_ref_audio)
             print(f"Final voice prompt length: {len(final_ref_audio)/target_sr:.2f}s (from {len(combined_ref_audio)} clips)")
+            print("\n--- Selected Clips ---")
+            for clip in selected_clips:
+                print(f"USED: {os.path.basename(clip)}")
+            print("----------------------\n")
+            
+            # Optional: Copy to Known Good folder if env var is set or just hardcoded for this request
+            # For now, just printing them allows the user to know. 
+            # We can also auto-copy them to "SampleAudio/Trump_KnownGood" if we want to be proactive.
+            known_good_dir = os.path.join(os.path.dirname(ref_audios[0]), "Known_Good_Candidates")
+            if not os.path.exists(known_good_dir):
+                os.makedirs(known_good_dir, exist_ok=True)
+                
+            import shutil
+            for clip in selected_clips:
+                try:
+                    shutil.copy(clip, known_good_dir)
+                except shutil.SameFileError:
+                    pass # Already there
+                except Exception as e:
+                    print(f"Warning: Could not copy {clip} to known good: {e}")
+            print(f"Copied selected clips to: {known_good_dir}")
+                
         else:
             final_ref_audio = None
             

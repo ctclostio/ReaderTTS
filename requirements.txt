@@ -7,3 +7,6 @@ soundfile
 pypdf
 EbookLib
 beautifulsoup4
+yt-dlp
+speechbrain
+pydub
