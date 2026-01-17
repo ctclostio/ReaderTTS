@@ -125,6 +125,14 @@ def run_demucs(input_path, output_dir):
     """Runs Demucs to separate vocals."""
     print(f"Running Demucs on {input_path}...")
     # demucs -n htdemucs --two-stems vocals -o output_dir input_path
+    # Expected output: output_dir/htdemucs/{filename}/vocals.wav
+    filename = Path(input_path).stem
+    vocals_path = Path(output_dir) / "htdemucs" / filename / "vocals.wav"
+    
+    if vocals_path.exists():
+        print(f"Demucs output found at {vocals_path}. Skipping separation.")
+        return vocals_path
+
     cmd = [
         "demucs",
         "-n", "htdemucs",
