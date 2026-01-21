@@ -75,14 +75,12 @@ class VibeVoiceClient:
         
         print(f"Loading and combining {len(ref_audios)} reference clips for stable voice prompt...")
         
-        # Memory Optimization: Full dataset (2000+ files) causes OOM on 24GB VRAM.
-        # We need to limit the prompt length.
-        # User requested 100s limit. This is likely near the upper bound for 24GB VRAM/Context Window.
-        target_duration = 100.0 
+        # Memory Optimization & Quality Control:
+        # Zero-shot models often degrade with very long prompts (>15-20s), but user wants to test 45s.
+        target_duration = 45.0 
         current_duration = 0.0
         
         # Shuffle to get a variety of "Kratos" tones each time
-        import random
         random.shuffle(ref_audios)
         
         torch.cuda.empty_cache() # Clear any residual memory
@@ -97,6 +95,22 @@ class VibeVoiceClient:
             try:
                 target_sr = getattr(self.processor.audio_processor, 'sampling_rate', 24000)
                 audio, _ = librosa.load(ref_path, sr=target_sr)
+                
+                # Check how much more we need
+                remaining_dur = target_duration - current_duration
+                remaining_samples = int(remaining_dur * target_sr)
+                
+                if len(audio) > remaining_samples:
+                    # If this single clip is longer than we need (or very long), take a slice
+                    # If it's a huge file (like 100s), taking 15s from a random valid point is good.
+                    if len(audio) > target_sr * 5: # If clip is > 5s, we can afford to slice randomly
+                         max_start = len(audio) - remaining_samples
+                         start_idx = random.randint(0, max_start)
+                         audio = audio[start_idx : start_idx + remaining_samples]
+                    else:
+                         # Brief clip, just take what we need from start
+                         audio = audio[:remaining_samples]
+                         
                 combined_ref_audio.append(audio)
                 current_duration += len(audio) / target_sr
                 selected_clips.append(ref_path)

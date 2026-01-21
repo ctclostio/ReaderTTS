@@ -32,3 +32,6 @@ AudioTools/venv_processing/
 .DS_Store
 Thumbs.db
 
+
+# Agent Context
+.gemini_project_context.md
